@@ -597,59 +597,87 @@ document.addEventListener(
 
 /* MUSIK ULANG TAHUN */
 
-<!-- Tombol Musik -->
-<button id="musicButton" onclick="toggleMusic()">
-  🔊 Musik ON
-</button>
+let ctx=null;
+let playing=false;
 
-<audio id="backgroundMusic" loop>
-  <source src="assets/music.mp3" type="audio/mpeg">
-</audio>
+function musicToggle(){
 
-<style>
-  #musicButton {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
+ if(playing){
 
-    padding: 12px 18px;
-    border: none;
-    border-radius: 25px;
+  ctx.close();
+  ctx=null;
+  playing=false;
 
-    background: #ff69b4;
-    color: white;
+  document.getElementById(
+   "musicButton"
+  ).textContent="🎵";
 
-    font-size: 15px;
-    font-weight: bold;
+  return;
 
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  }
+ }
 
-  #musicButton:hover {
-    transform: scale(1.05);
-  }
-</style>
+ ctx=new(
+  window.AudioContext||
+  window.webkitAudioContext
+ )();
 
-<script>
-  const music = document.getElementById("backgroundMusic");
-  const musicButton = document.getElementById("musicButton");
+ playing=true;
 
-  let musicPlaying = false;
+ document.getElementById(
+  "musicButton"
+ ).textContent="🔊";
 
-  function toggleMusic() {
-    if (musicPlaying) {
-      music.pause();
-      musicButton.innerHTML = "🔇 Musik OFF";
-      musicPlaying = false;
-    } else {
-      music.play();
-      musicButton.innerHTML = "🔊 Musik ON";
-      musicPlaying = true;
-    }
-  }
-</script>
+melody();
+
+}
+
+function melody(){
+
+ if(!playing)return;
+
+ const notes=[
+ 264,264,297,264,352,330,
+ 264,264,297,264,396,352,
+ 264,264,528,440,352,330,297,
+ 466,466,440,352,396,352
+ ];
+
+ let t=ctx.currentTime;
+
+ notes.forEach(n=>{
+
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+
+  o.type="sine";
+  o.frequency.value=n;
+
+  g.gain.setValueAtTime(.001,t);
+
+  g.gain.exponentialRampToValueAtTime(
+   .12,t+.03
+  );
+
+  g.gain.exponentialRampToValueAtTime(
+   .001,t+.35
+  );
+
+  o.connect(g);
+  g.connect(ctx.destination);
+
+  o.start(t);
+  o.stop(t+.4);
+
+  t+=.42;
+
+ });
+
+ setTimeout(
+  ()=>melody(),
+  notes.length*420+1000
+ );
+
+}
 
 
 /* HATI */
