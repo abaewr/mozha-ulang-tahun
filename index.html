@@ -225,6 +225,8 @@ body{
 
 </div>
 
+<audio id="birthdayMusic" src="music.mp3" loop preload="auto"></audio>
+
 <div class="container">
 
 <div class="counter">
@@ -597,131 +599,59 @@ document.addEventListener(
 
 /* MUSIK ULANG TAHUN */
 
-let ctx=null;
-let playing=false;
+const birthdayMusic = document.getElementById("birthdayMusic");
+let playing = false;
+let musicStartedOnce = false;
 
-function musicToggle(){
+async function startBirthdayMusic(){
 
- if(playing){
+  if(playing) return;
 
-  ctx.close();
-  ctx=null;
-  playing=false;
+  try{
+    await birthdayMusic.play();
+    playing = true;
+    musicStartedOnce = true;
 
-  document.getElementById(
-   "musicButton"
-  ).textContent="🎵";
+    const button = document.getElementById("musicButton");
+    if(button) button.textContent = "🔊";
 
-  return;
-
- }
-
- ctx=new(
-  window.AudioContext||
-  window.webkitAudioContext
- )();
-
- playing=true;
-
- document.getElementById(
-  "musicButton"
- ).textContent="🔊";
-
-melody();
+  }catch(error){
+    console.log("Musik menunggu interaksi pengguna:", error);
+  }
 
 }
 
-function melody(){
+async function musicToggle(){
 
- if(!playing)return;
+  const button = document.getElementById("musicButton");
 
- const notes=[
- 264,264,297,264,352,330,
- 264,264,297,264,396,352,
- 264,264,528,440,352,330,297,
- 466,466,440,352,396,352
- ];
+  if(playing){
 
- let t=ctx.currentTime;
+    birthdayMusic.pause();
+    playing = false;
+    button.textContent = "🎵";
+    return;
 
- notes.forEach(n=>{
+  }
 
-  const o=ctx.createOscillator();
-  const g=ctx.createGain();
-
-  o.type="sine";
-  o.frequency.value=n;
-
-  g.gain.setValueAtTime(.001,t);
-
-  g.gain.exponentialRampToValueAtTime(
-   .12,t+.03
-  );
-
-  g.gain.exponentialRampToValueAtTime(
-   .001,t+.35
-  );
-
-  o.connect(g);
-  g.connect(ctx.destination);
-
-  o.start(t);
-  o.stop(t+.4);
-
-  t+=.42;
-
- });
-
- setTimeout(
-  ()=>melody(),
-  notes.length*420+1000
- );
+  await startBirthdayMusic();
 
 }
 
+/* Browser HP biasanya memblokir autoplay.
+   Karena itu musik dicoba setelah sentuhan/klik pertama pengguna. */
+function enableMusicAfterFirstInteraction(){
 
-/* HATI */
+  if(musicStartedOnce) return;
 
-const hearts=[
- "❤️","💕","💖","✨","🌸","💐"
-];
+  startBirthdayMusic();
 
-function heart(){
-
- const h=
-  document.createElement("div");
-
- h.className="float";
-
- h.textContent=
-  hearts[
-   Math.floor(
-    Math.random()*hearts.length
-   )
-  ];
-
- h.style.left=
-  Math.random()*100+"vw";
-
- h.style.fontSize=
-  15+Math.random()*25+"px";
-
- h.style.animationDuration=
-  5+Math.random()*6+"s";
-
- document.body.appendChild(h);
-
- setTimeout(
-  ()=>h.remove(),
-  12000
- );
-
+  document.removeEventListener("click", enableMusicAfterFirstInteraction);
+  document.removeEventListener("touchstart", enableMusicAfterFirstInteraction);
 }
 
-setInterval(heart,700);
-
-show();
-
+document.addEventListener("click", enableMusicAfterFirstInteraction, {once:true});
+document.addEventListener("touchstart", enableMusicAfterFirstInteraction, {once:true});
 </script>
 
 </body>
